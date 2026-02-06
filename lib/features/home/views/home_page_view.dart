@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:healthcare_booking_platform/core/theme/app_colors.dart';
-import 'package:healthcare_booking_platform/features/home/widgets/booking_card.dart';
+import 'package:healthcare_booking_platform/features/home/widgets/booking_card_widget.dart';
 
 class HomePageView extends StatelessWidget {
   const HomePageView({super.key});
@@ -181,7 +182,7 @@ class HomePageView extends StatelessWidget {
                     height: 54,
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () => context.push('/register'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryColor,
                         shape: RoundedRectangleBorder(
