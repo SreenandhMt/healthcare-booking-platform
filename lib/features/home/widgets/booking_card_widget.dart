@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:healthcare_booking_platform/core/theme/app_colors.dart';
+import 'package:healthcare_booking_platform/features/home/models/treatment_model.dart';
 
 class BookingCardWidget extends StatelessWidget {
-  const BookingCardWidget({super.key});
+  final TreatmentModel treatment;
+  final int index;
+  const BookingCardWidget({
+    super.key,
+    required this.treatment,
+    required this.index,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +28,7 @@ class BookingCardWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "1.",
+                  "${index + 1}.",
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -34,7 +41,7 @@ class BookingCardWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Vikram Singh",
+                        treatment.name,
                         style: GoogleFonts.poppins(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -43,7 +50,7 @@ class BookingCardWidget extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "Couple Combo Package (Rejuven...)",
+                        treatment.duration,
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           color: AppColors.primaryColor.withOpacity(0.8),
@@ -54,13 +61,13 @@ class BookingCardWidget extends StatelessWidget {
                       Row(
                         children: [
                           const Icon(
-                            Icons.calendar_today_outlined,
+                            Icons.payments_outlined,
                             size: 16,
                             color: Colors.redAccent,
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            "31/01/2024",
+                            "₹ ${treatment.price}",
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               color: const Color(0xFF666666),
@@ -68,13 +75,13 @@ class BookingCardWidget extends StatelessWidget {
                           ),
                           const SizedBox(width: 20),
                           const Icon(
-                            Icons.people_outline,
+                            Icons.timer_outlined,
                             size: 18,
                             color: Colors.redAccent,
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            "Jithesh",
+                            "${treatment.duration.split(' ').first} min",
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               color: const Color(0xFF666666),
@@ -98,7 +105,7 @@ class BookingCardWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "View Booking details",
+                  "View details",
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     color: const Color(0xFF333333),

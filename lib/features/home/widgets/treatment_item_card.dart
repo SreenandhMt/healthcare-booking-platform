@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:healthcare_booking_platform/core/theme/app_colors.dart';
+import 'package:healthcare_booking_platform/features/home/view_models/register_viewmodel.dart';
+import 'package:healthcare_booking_platform/features/home/widgets/add_treatment_dialog.dart';
+import 'package:provider/provider.dart';
 
 class TreatmentItemCard extends StatelessWidget {
-  const TreatmentItemCard({super.key});
+  final SelectedTreatment selected;
+  final int index;
+
+  const TreatmentItemCard({
+    super.key,
+    required this.selected,
+    required this.index,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
@@ -20,7 +30,7 @@ class TreatmentItemCard extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  "1.",
+                  "${index + 1}.",
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
@@ -30,7 +40,7 @@ class TreatmentItemCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    "Couple Combo package isssssssssssss",
+                    selected.treatment.name,
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
@@ -39,13 +49,24 @@ class TreatmentItemCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFF8A8A),
-                    shape: BoxShape.circle,
+                GestureDetector(
+                  onTap: () {
+                    context.read<RegisterViewModel>().removeTreatment(
+                      selected.treatment.id,
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFF8A8A),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      size: 14,
+                      color: Colors.white,
+                    ),
                   ),
-                  child: const Icon(Icons.close, size: 14, color: Colors.white),
                 ),
               ],
             ),
@@ -62,7 +83,7 @@ class TreatmentItemCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                const _CountBox(count: "2"),
+                _CountBox(count: selected.maleCount.toString()),
                 const Spacer(),
                 Text(
                   "Female",
@@ -73,12 +94,27 @@ class TreatmentItemCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                const _CountBox(count: "2"),
+                _CountBox(count: selected.femaleCount.toString()),
                 const Spacer(),
-                const Icon(
-                  Icons.edit_outlined,
-                  size: 20,
-                  color: AppColors.primaryColor,
+                GestureDetector(
+                  onTap: () {
+                    showGeneralDialog(
+                      context: context,
+                      barrierDismissible: true,
+                      barrierLabel: "Edit Treatment",
+                      pageBuilder: (context, anim1, anim2) {
+                        return AddTreatmentDialog(
+                          editIndex: index,
+                          initialValue: selected,
+                        );
+                      },
+                    );
+                  },
+                  child: const Icon(
+                    Icons.edit_outlined,
+                    size: 20,
+                    color: AppColors.primaryColor,
+                  ),
                 ),
               ],
             ),

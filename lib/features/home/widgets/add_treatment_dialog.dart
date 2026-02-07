@@ -1,12 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:healthcare_booking_platform/core/theme/app_colors.dart';
+import 'package:healthcare_booking_platform/features/home/models/treatment_model.dart';
+import 'package:healthcare_booking_platform/features/home/view_models/home_viewmodel.dart';
+import 'package:healthcare_booking_platform/features/home/view_models/register_viewmodel.dart';
+import 'package:provider/provider.dart';
 
-class AddTreatmentDialog extends StatelessWidget {
-  const AddTreatmentDialog({super.key});
+class AddTreatmentDialog extends StatefulWidget {
+  final int? editIndex;
+  final SelectedTreatment? initialValue;
+
+  const AddTreatmentDialog({super.key, this.editIndex, this.initialValue});
+
+  @override
+  State<AddTreatmentDialog> createState() => _AddTreatmentDialogState();
+}
+
+class _AddTreatmentDialogState extends State<AddTreatmentDialog> {
+  late int maleCount;
+  late int femaleCount;
+  late TreatmentModel? selectedTreatment;
+  String? treatmentError;
+  String? patientError;
+
+  @override
+  void initState() {
+    super.initState();
+    maleCount = widget.initialValue?.maleCount ?? 0;
+    femaleCount = widget.initialValue?.femaleCount ?? 0;
+    selectedTreatment = widget.initialValue?.treatment;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final homeVM = context.watch<HomeViewModel>();
+
     return Center(
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 24),
@@ -39,24 +67,46 @@ class AddTreatmentDialog extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: const Color(0xFFEAEAEA)),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<TreatmentModel>(
+                    isExpanded: true,
+                    hint: Text(
                       "Choose preferred treatment",
                       style: GoogleFonts.poppins(
                         color: const Color(0xFFBBBBBB),
                         fontSize: 13,
                       ),
                     ),
-                    const Icon(
-                      Icons.keyboard_arrow_down,
-                      color: AppColors.primaryColor,
-                      size: 24,
-                    ),
-                  ],
+                    value: selectedTreatment,
+                    // If editing, usually we don't change the treatment, but we can allow it
+                    items: homeVM.treatments.map((treatment) {
+                      return DropdownMenuItem(
+                        value: treatment,
+                        child: Text(
+                          treatment.name,
+                          style: GoogleFonts.poppins(fontSize: 13),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: widget.editIndex != null
+                        ? null
+                        : (val) {
+                            setState(() {
+                              selectedTreatment = val;
+                              treatmentError = null;
+                            });
+                          },
+                  ),
                 ),
               ),
+              if (treatmentError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, left: 4),
+                  child: Text(
+                    treatmentError!,
+                    style: GoogleFonts.poppins(color: Colors.red, fontSize: 12),
+                  ),
+                ),
               const SizedBox(height: 24),
               Text(
                 "Add Patients",
@@ -67,15 +117,77 @@ class AddTreatmentDialog extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              const _PatientCountRow(label: "Male"),
+              _PatientCountRow(
+                label: "Male",
+                count: maleCount,
+                onIncrement: () => setState(() {
+                  maleCount++;
+                  patientError = null;
+                }),
+                onDecrement: () => setState(() {
+                  maleCount = maleCount > 0 ? maleCount - 1 : 0;
+                  patientError = null;
+                }),
+              ),
               const SizedBox(height: 16),
-              const _PatientCountRow(label: "Female"),
+              _PatientCountRow(
+                label: "Female",
+                count: femaleCount,
+                onIncrement: () => setState(() {
+                  femaleCount++;
+                  patientError = null;
+                }),
+                onDecrement: () => setState(() {
+                  femaleCount = femaleCount > 0 ? femaleCount - 1 : 0;
+                  patientError = null;
+                }),
+              ),
+              if (patientError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, left: 4),
+                  child: Text(
+                    patientError!,
+                    style: GoogleFonts.poppins(color: Colors.red, fontSize: 12),
+                  ),
+                ),
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
                 height: 54,
                 child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () {
+                    setState(() {
+                      treatmentError = null;
+                      patientError = null;
+                    });
+
+                    if (selectedTreatment != null &&
+                        (maleCount > 0 || femaleCount > 0)) {
+                      if (widget.editIndex != null) {
+                        context.read<RegisterViewModel>().updateTreatment(
+                          widget.editIndex!,
+                          maleCount,
+                          femaleCount,
+                        );
+                      } else {
+                        context.read<RegisterViewModel>().addTreatment(
+                          selectedTreatment!,
+                          maleCount,
+                          femaleCount,
+                        );
+                      }
+                      Navigator.pop(context);
+                    } else {
+                      setState(() {
+                        if (selectedTreatment == null) {
+                          treatmentError = "Please select a treatment";
+                        }
+                        if (maleCount == 0 && femaleCount == 0) {
+                          patientError = "Please add at least one patient";
+                        }
+                      });
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryColor,
                     shape: RoundedRectangleBorder(
@@ -103,7 +215,16 @@ class AddTreatmentDialog extends StatelessWidget {
 
 class _PatientCountRow extends StatelessWidget {
   final String label;
-  const _PatientCountRow({required this.label});
+  final int count;
+  final VoidCallback onIncrement;
+  final VoidCallback onDecrement;
+
+  const _PatientCountRow({
+    required this.label,
+    required this.count,
+    required this.onIncrement,
+    required this.onDecrement,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +252,7 @@ class _PatientCountRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 16),
-        const _CircleButton(icon: Icons.remove),
+        _CircleButton(icon: Icons.remove, onTap: onDecrement),
         const SizedBox(width: 12),
         Container(
           width: 44,
@@ -143,7 +264,7 @@ class _PatientCountRow extends StatelessWidget {
             border: Border.all(color: const Color(0xFFE2E2E2)),
           ),
           child: Text(
-            "0",
+            count.toString(),
             style: GoogleFonts.poppins(
               fontSize: 15,
               fontWeight: FontWeight.w600,
@@ -151,7 +272,7 @@ class _PatientCountRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        const _CircleButton(icon: Icons.add),
+        _CircleButton(icon: Icons.add, onTap: onIncrement),
       ],
     );
   }
@@ -159,25 +280,29 @@ class _PatientCountRow extends StatelessWidget {
 
 class _CircleButton extends StatelessWidget {
   final IconData icon;
-  const _CircleButton({required this.icon});
+  final VoidCallback onTap;
+  const _CircleButton({required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: const BoxDecoration(
-        color: AppColors.primaryColor,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x1F000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: const BoxDecoration(
+          color: AppColors.primaryColor,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x1F000000),
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(icon, color: Colors.white, size: 24),
       ),
-      child: Icon(icon, color: Colors.white, size: 24),
     );
   }
 }

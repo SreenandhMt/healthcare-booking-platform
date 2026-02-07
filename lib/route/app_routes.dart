@@ -8,7 +8,7 @@ import 'package:healthcare_booking_platform/features/splash/views/splash_page_vi
 class AppRoutes {
   static GoRouter get router => _router;
   static final GoRouter _router = GoRouter(
-    initialLocation: "/",
+    initialLocation: "/splash",
     routes: [
       GoRoute(
         path: '/splash',
@@ -29,7 +29,7 @@ class AppRoutes {
         ],
       ),
       GoRoute(
-        path: '/',
+        path: '/login',
         builder: (BuildContext context, GoRouterState state) {
           return const LoginPageview();
         },
